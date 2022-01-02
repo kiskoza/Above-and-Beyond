@@ -12,6 +12,7 @@
 * Update Forge to version 36.2.26 to fix java version incompatibility
 * Add other metal barrel upgrade items
 * Added recipes to the Phytogenic Insolator for Farmer's Delight onions and rice to be consistent with other crops.
+* Added black dye as valid dye for Chromatic Singularity recipe
 
 ## 1.3 - 2021-12-15
 
