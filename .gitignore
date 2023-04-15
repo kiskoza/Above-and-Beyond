@@ -1,4 +1,6 @@
 .mixin.out/**
+backups/
+config/ftbquests/backup/
 crash-reports/**
 logs/**
 mods/**
