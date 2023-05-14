@@ -17,7 +17,7 @@ Download the [latest release](https://github.com/kiskoza/Above-and-Beyond/releas
 
 ## Development
 
-Build a new release with `./build.sh 1.3.1`
+Build a new release with `./build.sh`
 
 ## Contributing
 

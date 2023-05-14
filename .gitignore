@@ -27,3 +27,5 @@ usercache.json
 usernamecache.json
 
 build/
+.env
+tmp
