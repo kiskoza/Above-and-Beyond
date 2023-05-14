@@ -2,11 +2,7 @@
 
 ## Unreleased
 
-### Breaking Changes
-
-### Added
-
-### Fixed
+## 1.3.1 - 2023-05-14
 
 * Add waterstrainer:fertilizer to tree_extractor as a known fertilizer
 * Update Forge to version 36.2.26 to fix java version incompatibility
