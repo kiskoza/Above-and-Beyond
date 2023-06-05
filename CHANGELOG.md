@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add recipe to create create:white_sail from create:sail_frame
+
 ## 1.3.1 - 2023-05-14
 
 * Add waterstrainer:fertilizer to tree_extractor as a known fertilizer

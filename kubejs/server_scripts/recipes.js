@@ -1291,6 +1291,12 @@ function trickierWindmills(event) {
 		N: 'minecraft:iron_nugget',
 		S: 'minecraft:stick'
 	})
+	event.shaped('create:white_sail', [
+		'FW'
+	], {
+		F: 'create:sail_frame',
+		W: '#appliedenergistics2:wool'
+	})
 }
 
 function rubberMatters(event) {
