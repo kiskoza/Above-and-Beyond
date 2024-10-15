@@ -11,9 +11,15 @@ More information on the original Project Page: https://www.curseforge.com/minecr
 - [Minecraft 1.16.5](https://www.minecraft.net/)
 - [GD Launcher](https://gdlauncher.com/) or any other modpack launcher
 
-### Installing
+### Single player
 
 Download the [latest release](https://github.com/kiskoza/Above-and-Beyond/releases) as a .zip and start it with your favorite launcher.
+
+### Server
+
+1. Install docker
+2. Download the server zip and the docker-compose.yml file from the [latest release](https://github.com/kiskoza/Above-and-Beyond/releases)
+3. Start it with `docker compose up`
 
 ## Development
 
