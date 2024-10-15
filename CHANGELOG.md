@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Add recipe to create create:white_sail from create:sail_frame
+* Include a docker compose to start the server more easily
 
 ## 1.3.1 - 2023-05-14
 

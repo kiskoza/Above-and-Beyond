@@ -1,0 +1,37 @@
+services:
+  mc:
+    image: itzg/minecraft-server:java8
+    volumes:
+      - ./modpacks:/modpacks:ro
+      - ./data:/data
+    environment:
+      # Accept the EULA, yay! \o/
+      EULA: true
+
+      # Set modpack type, Minecraft version and server zip
+      TYPE: CURSEFORGE
+      VERSION: 1.16.5
+      CF_SERVER_MOD: /modpacks/Above-and-Beyond-1.3.1-server.zip
+      USE_MODPACK_START_SCRIPT: false # there's no start script for this modpack
+
+      # Configure Server
+      MEMORY: 12G
+      SNOOPER_ENABLED: false
+      ENABLE_WHITELIST: true
+      USE_AIKAR_FLAGS: true
+
+      # Turn off RCON and use the cli to send admin commands
+      # See https://docker-minecraft-server.readthedocs.io/en/latest/commands/#when-rcon-is-disabled
+      ENABLE_RCON: false
+      CREATE_CONSOLE_IN_PIPE: true
+
+      # Auto-stop the Minecraft Server when no players are online
+      # Note: this does not stop the machine, just the MC server
+      ENABLE_AUTOSTOP: true
+      AUTOSTOP_TIMEOUT_EST: 180 # seconds
+      AUTOSTOP_TIMEOUT_INIT: 480 # seconds
+
+      # Gameplay configuration
+      DIFFICULTY: normal
+    ports:
+      - 25565:25565
