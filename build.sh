@@ -1,39 +1,36 @@
 #!/usr/bin/bash
 
+# Get project root based on build.sh directory
 PROJECT_ROOT=$(dirname "$(readlink -f "$0")")
-BUILD_DIR="${PROJECT_ROOT}"/build
-MOD_CACHE_DIR="${PROJECT_ROOT}"/tmp/cache/mods
+pushd ${PROJECT_ROOT} &>/dev/null
+
+BUILD_DIR=build
+MOD_CACHE_DIR=/tmp/cache/mods
 
 # Load APIKEY from a .env file
-if [[ ! -f ${PROJECT_ROOT}/.env ]]; then
-    echo ".env file missing! Cannot load API key!"
-    exit 1
-fi
 set -o allexport
-source "${PROJECT_ROOT}"/.env
+source .env
 set +o allexport
 
-[[ -z "$APIKEY" ]] && { echo "API key not found!" ; exit 1; }
-
-MANIFEST_JSON="${PROJECT_ROOT}"/manifest.json
-
 VERSION=$(jq '.version' < "${MANIFEST_JSON}" -r)
-[[ -z "$VERSION" ]] && { echo "Version is empty" ; exit 1; }
+
+[[ -z "$APIKEY"  ]] && { echo "API key not found!"; exit 1; }
+[[ -z "$VERSION" ]] && { echo "Version is empty";   exit 1; }
 
 build_client () {
     mkdir -p "${BUILD_DIR}"/overrides
     
     TARGETS="config defaultconfigs kubejs openloader resourcepacks shaderpacks worldshape"
     for T in $TARGETS; do 
-        cp -r "${PROJECT_ROOT}/$T" "${BUILD_DIR}"/overrides
+        cp -r "$T" "${BUILD_DIR}"/overrides
     done
 
-    cp "${MANIFEST_JSON}" "${BUILD_DIR}"/manifest.json
-    cp "${PROJECT_ROOT}"/modlist.html "${BUILD_DIR}"/modlist.html
+    cp manifest.json "${BUILD_DIR}"/manifest.json
+    cp modlist.html  "${BUILD_DIR}"/modlist.html
 
-    pushd ${BUILD_DIR} &>/dev/null || exit 1
-    zip -r "${PROJECT_ROOT}/Above-and-Beyond-$VERSION.zip" .
-    popd &>/dev/null || exit 1
+    pushd ${BUILD_DIR} &>/dev/null
+    zip -r "../Above-and-Beyond-$VERSION.zip" .
+    popd &>/dev/null
 
     rm -rf "${BUILD_DIR}"
 }
@@ -43,11 +40,11 @@ build_server () {
     
     TARGETS="config defaultconfigs kubejs openloader worldshape"
     for T in $TARGETS; do 
-        cp -r "${PROJECT_ROOT}/${T}" "${BUILD_DIR}"
+        cp -r "${T}" "${BUILD_DIR}"
     done
     
-    cp "${PROJECT_ROOT}"/server.properties "${BUILD_DIR}"/server.properties
-    cp "${PROJECT_ROOT}"/server-icon.png   "${BUILD_DIR}"/server-icon.png
+    cp server.properties "${BUILD_DIR}"/server.properties
+    cp server-icon.png   "${BUILD_DIR}"/server-icon.png
 
     # Download mods
     download_mods
@@ -58,11 +55,11 @@ build_server () {
     
     # Download forge installer
     download_forge
-    echo "Generating server pack: ${PROJECT_ROOT}/Above-and-Beyond-$VERSION-server.zip"
+    echo "Generating server pack: Above-and-Beyond-$VERSION-server.zip"
 
-    pushd ${BUILD_DIR} &>/dev/null || exit 1
-    zip -r "${PROJECT_ROOT}/Above-and-Beyond-$VERSION-server.zip" .
-    popd &>/dev/null || exit 1
+    pushd ${BUILD_DIR} &>/dev/null
+    zip -r "../Above-and-Beyond-$VERSION-server.zip" .
+    popd &>/dev/null
 
     rm -rd "${BUILD_DIR}"
 }
@@ -71,7 +68,7 @@ download_mods () {
     echo "Downloading mods to ${BUILD_DIR}/mods"
     mkdir -p "${BUILD_DIR}"/mods
   
-    for ids in $(jq '.files[] | "\(.projectID),\(.fileID)"' < "${MANIFEST_JSON}" -r); do
+    for ids in $(jq '.files[] | "\(.projectID),\(.fileID)"' < manifest.json -r); do
         PROJECT_ID=$(cut -d, -f1 <<< "${ids}")
         FILE_ID=$(cut -d, -f2 <<< "${ids}")
 
@@ -112,8 +109,8 @@ download_mods () {
 
 download_forge () {
     echo "Downloading Forge to ${BUILD_DIR}"
-    MC_VERSION=$(jq '.minecraft.version' < "${MANIFEST_JSON}" -r)
-    FORGE_VERSION=$(jq '.minecraft.modLoaders[0].id' < "${MANIFEST_JSON}" -r | cut -d- -f2)
+    MC_VERSION=$(jq '.minecraft.version' < manifest.json -r)
+    FORGE_VERSION=$(jq '.minecraft.modLoaders[0].id' < manifest.json -r | cut -d- -f2)
     
     echo "Minecraft version: $MC_VERSION"
     echo "Forge version: $FORGE_VERSION"
@@ -131,27 +128,32 @@ print_help () {
 }
 
 if [[ -z "$*" ]]; then
-    echo "No argumetns given!"
-    print_help
+    echo "Building whole pack"
+    build_client
+    build_server
 fi
 
 for ARG in "$@"; do
     case $ARG in
-        "server")
+        "--server")
             echo "Building server pack"
             build_server
             ;;
-        "client")
+        "--client")
             echo "Buildind client pack"
             build_client
             ;;
-        "help")
+        "--help")
             print_help
             ;;
         *)
             echo "Incorrect argument!"
             print_help
+            popd &>/dev/null
             exit 1
             ;;
     esac
 done
+
+popd &>/dev/null
+
