@@ -123,9 +123,10 @@ print_help () {
     echo "Above and beyond builder" 
     echo "Give arguments to build the server or the client pack!"
     echo "Usage:"
-    echo " ./build.sh server -- builds the server pack"
-    echo " ./build.sh client -- builds the client pack"
-    echo " ./build.sh help   -- builds the client pack"
+    echo " ./build.sh --server  -- builds the server pack"
+    echo " ./build.sh --client  -- builds the client pack"
+    echo " ./build.sh --version -- sets the package version in the build"
+    echo " ./build.sh --help    -- builds the client pack"
     echo "(you can build both by using both arguments)"
 }
 
@@ -135,8 +136,9 @@ if [[ -z "$*" ]]; then
     build_server
 fi
 
-for ARG in "$@"; do
-    case $ARG in
+for ((i=1; i<=$#; i++)); do
+    echo ${!i}
+    case ${!i} in
         "--server")
             echo "Building server pack"
             build_server
@@ -147,6 +149,10 @@ for ARG in "$@"; do
             ;;
         "--help")
             print_help
+            ;;
+        "--version")
+            i=$((i+1))
+            VERSION="${!i}"
             ;;
         *)
             echo "Incorrect argument!"
