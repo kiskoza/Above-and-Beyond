@@ -14,7 +14,7 @@ if [[ -f .env ]]; then
     set +o allexport
 fi
 
-VERSION=$(jq '.version' < manifest.json -r)
+VERSION=$(jq -r '.version' manifest.json)
 
 [[ -z "$APIKEY"  ]] && { echo "API key not found!"; exit 1; }
 [[ -z "$VERSION" ]] && { echo "Version is empty";   exit 1; }
@@ -70,7 +70,7 @@ download_mods () {
     echo "Downloading mods to ${BUILD_DIR}/mods"
     mkdir -p "${BUILD_DIR}"/mods
   
-    for ids in $(jq '.files[] | "\(.projectID),\(.fileID)"' < manifest.json -r); do
+    for ids in $(jq -r '.files[] | "\(.projectID),\(.fileID)"' manifest.json); do
         PROJECT_ID=$(cut -d, -f1 <<< "${ids}")
         FILE_ID=$(cut -d, -f2 <<< "${ids}")
 
@@ -79,8 +79,8 @@ download_mods () {
                          -H 'Accept: application/json' \
                          -H "x-api-key: $APIKEY")
 
-        DOWNLOAD_URL=$(jq '.data.downloadUrl' -r <<< "${FILE_META}")
-        FILE_NAME=$(jq '.data.fileName' -r <<< "${FILE_META}")
+        DOWNLOAD_URL=$(jq -r '.data.downloadUrl' <<< "${FILE_META}")
+        FILE_NAME=$(jq -r '.data.fileName' <<< "${FILE_META}")
 
         if [ -f "${MOD_CACHE_DIR}/$FILE_NAME" ]; then
             echo -n '.'
@@ -94,7 +94,7 @@ download_mods () {
                                -X GET "https://api.curseforge.com/v1/mods/$PROJECT_ID" \
                                -H 'Accept: application/json' \
                                -H "x-api-key: $APIKEY" \
-                              | jq '.data.links.websiteUrl' -r
+                              | jq -r '.data.links.websiteUrl'
                        )
             echo ""
             echo "You need to download this mod manually."
@@ -111,8 +111,8 @@ download_mods () {
 
 download_forge () {
     echo "Downloading Forge to ${BUILD_DIR}"
-    MC_VERSION=$(jq '.minecraft.version' < manifest.json -r)
-    FORGE_VERSION=$(jq '.minecraft.modLoaders[0].id' < manifest.json -r | cut -d- -f2)
+    MC_VERSION=$(jq -r '.minecraft.version' manifest.json)
+    FORGE_VERSION=$(jq -r '.minecraft.modLoaders[0].id' manifest.json | cut -d- -f2)
     
     echo "Minecraft version: $MC_VERSION"
     echo "Forge version: $FORGE_VERSION"
@@ -137,7 +137,6 @@ if [[ -z "$*" ]]; then
 fi
 
 for ((i=1; i<=$#; i++)); do
-    echo ${!i}
     case ${!i} in
         "--server")
             echo "Building server pack"
@@ -165,3 +164,4 @@ done
 
 popd &>/dev/null
 
+exit 0
