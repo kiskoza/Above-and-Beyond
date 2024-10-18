@@ -8,11 +8,13 @@ BUILD_DIR=build
 MOD_CACHE_DIR=/tmp/cache/mods
 
 # Load APIKEY from a .env file
-set -o allexport
-source .env
-set +o allexport
+if [[ -f .env ]]; then
+    set -o allexport
+    source .env
+    set +o allexport
+fi
 
-VERSION=$(jq '.version' < "${MANIFEST_JSON}" -r)
+VERSION=$(jq '.version' < manifest.json -r)
 
 [[ -z "$APIKEY"  ]] && { echo "API key not found!"; exit 1; }
 [[ -z "$VERSION" ]] && { echo "Version is empty";   exit 1; }
