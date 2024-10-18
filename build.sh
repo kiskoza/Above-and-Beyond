@@ -5,7 +5,7 @@ PROJECT_ROOT=$(dirname "$(readlink -f "$0")")
 pushd ${PROJECT_ROOT} &>/dev/null
 
 BUILD_DIR=build
-MOD_CACHE_DIR=/tmp/cache/mods
+MOD_CACHE_DIR=tmp/cache/mods
 
 # Load APIKEY from a .env file
 if [[ -f .env ]]; then
