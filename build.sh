@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+# Fail if any error happens unhandled
+set -e
+
 # Get project root based on build.sh directory
 PROJECT_ROOT=$(dirname "$(readlink -f "$0")")
 pushd ${PROJECT_ROOT} &>/dev/null
