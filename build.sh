@@ -25,7 +25,7 @@ VERSION=$(jq -r '.version' manifest.json)
 build_client () {
     mkdir -p "${BUILD_DIR}"/overrides
     
-    TARGETS="config defaultconfigs kubejs openloader resourcepacks shaderpacks worldshape"
+    TARGETS="config defaultconfigs kubejs openloader worldshape"
     for T in $TARGETS; do 
         cp -r "$T" "${BUILD_DIR}"/overrides
     done
