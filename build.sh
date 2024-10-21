@@ -5,108 +5,107 @@ set -e
 
 # Get project root based on build.sh directory
 PROJECT_ROOT=$(dirname "$(readlink -f "$0")")
-pushd ${PROJECT_ROOT} &>/dev/null
+pushd "${PROJECT_ROOT}" &>/dev/null
 
-BUILD_DIR=build
-MOD_CACHE_DIR=tmp/cache/mods
-
-# Load APIKEY from a .env file
+# Load variables from a .env file
 if [[ -f .env ]]; then
     set -o allexport
     source .env
     set +o allexport
 fi
 
-VERSION=$(jq -r '.version' manifest.json)
-
-[[ -z "$APIKEY"  ]] && { echo "API key not found!"; exit 1; }
-[[ -z "$VERSION" ]] && { echo "Version is empty";   exit 1; }
-
 build_client () {
-    mkdir -p "${BUILD_DIR}"/overrides
-    
-    TARGETS="config defaultconfigs kubejs openloader worldshape"
-    for T in $TARGETS; do 
-        cp -r "$T" "${BUILD_DIR}"/overrides
-    done
+    mkdir -p $BUILD_DIR/overrides
 
-    cp manifest.json "${BUILD_DIR}"/manifest.json
-    cp modlist.html  "${BUILD_DIR}"/modlist.html
+    cp --target-dir $BUILD_DIR \
+       manifest.json modlist.html
 
-    pushd ${BUILD_DIR} &>/dev/null
-    zip -r "../Above-and-Beyond-$VERSION.zip" .
+    cp --target-dir $BUILD_DIR/overrides \
+       -r config defaultconfigs kubejs openloader worldshape
+
+    pushd $BUILD_DIR &>/dev/null
+    zip -q -r "Above-and-Beyond-$VERSION.zip" .
     popd &>/dev/null
+    mv "$BUILD_DIR/Above-and-Beyond-$VERSION.zip" .
 
-    rm -rf "${BUILD_DIR}"
+    rm -rf $BUILD_DIR
+
+    echo "Client pack is ready: Above-and-Beyond-$VERSION.zip"
 }
 
 build_server () {
-    mkdir -p "${BUILD_DIR}"
-    
-    TARGETS="config defaultconfigs kubejs openloader worldshape"
-    for T in $TARGETS; do 
-        cp -r "${T}" "${BUILD_DIR}"
-    done
-    
-    cp server.properties "${BUILD_DIR}"/server.properties
-    cp server-icon.png   "${BUILD_DIR}"/server-icon.png
+    mkdir -p $BUILD_DIR
+
+    cp --target-dir $BUILD_DIR \
+       server.properties server-icon.png
+
+    cp --target-dir $BUILD_DIR \
+       -r config defaultconfigs kubejs openloader worldshape
 
     # Download mods
     download_mods
-    
+
     # Cache mods for future builds
-    mkdir -p "${MOD_CACHE_DIR}"
-    cp "${BUILD_DIR}"/mods/* "${MOD_CACHE_DIR}"
-    
+    mkdir -p $MOD_CACHE_DIR
+    cp $BUILD_DIR/mods/* $MOD_CACHE_DIR
+
     # Download forge installer
     download_forge
-    echo "Generating server pack: Above-and-Beyond-$VERSION-server.zip"
 
     pushd ${BUILD_DIR} &>/dev/null
-    zip -r "../Above-and-Beyond-$VERSION-server.zip" .
+    zip -q -r "Above-and-Beyond-$VERSION-server.zip" .
     popd &>/dev/null
+    mv "$BUILD_DIR/Above-and-Beyond-$VERSION-server.zip" .
 
-    rm -rd "${BUILD_DIR}"
+    rm -rf $BUILD_DIR
+    echo "Server pack is ready: Above-and-Beyond-$VERSION-server.zip"
 }
 
 download_mods () {
-    echo "Downloading mods to ${BUILD_DIR}/mods"
+    echo "Downloading mods to $BUILD_DIR/mods"
     mkdir -p "${BUILD_DIR}"/mods
-  
-    for ids in $(jq -r '.files[] | "\(.projectID),\(.fileID)"' manifest.json); do
-        PROJECT_ID=$(cut -d, -f1 <<< "${ids}")
-        FILE_ID=$(cut -d, -f2 <<< "${ids}")
 
-        FILE_META=$(curl -sS \
-                         -X GET "https://api.curseforge.com/v1/mods/$PROJECT_ID/files/$FILE_ID" \
+    for ids in $(jq -r '.files[] | "\(.projectID),\(.fileID)"' manifest.json); do
+        local project_id
+        project_id=$(cut -d, -f1 <<< "${ids}")
+
+        local file_id
+        file_id=$(cut -d, -f2 <<< "${ids}")
+
+        local file_meta
+        file_meta=$(curl -sS \
+                         -X GET "https://api.curseforge.com/v1/mods/$project_id/files/$file_id" \
                          -H 'Accept: application/json' \
                          -H "x-api-key: $APIKEY")
 
-        DOWNLOAD_URL=$(jq -r '.data.downloadUrl' <<< "${FILE_META}")
-        FILE_NAME=$(jq -r '.data.fileName' <<< "${FILE_META}")
+        local download_url
+        download_url=$(jq -r '.data.downloadUrl' <<< "${file_meta}")
 
-        if [ -f "${MOD_CACHE_DIR}/$FILE_NAME" ]; then
+        local file_name
+        file_name=$(jq -r '.data.fileName' <<< "${file_meta}")
+
+        if [ -f "${MOD_CACHE_DIR}/$file_name" ]; then
             echo -n '.'
-            cp "${MOD_CACHE_DIR}/$FILE_NAME" "${BUILD_DIR}"/mods
-        elif [ "$DOWNLOAD_URL" != "null" ]; then
+            cp "${MOD_CACHE_DIR}/$file_name" "${BUILD_DIR}"/mods
+        elif [ "$download_url" != "null" ]; then
             echo -n 'D'
-            wget -q "$DOWNLOAD_URL" -P "${BUILD_DIR}"/mods
+            wget -q "$download_url" -P "${BUILD_DIR}"/mods
         else
             echo -n 'M'
-            WEBSITE_URL=$(curl -sS \
-                               -X GET "https://api.curseforge.com/v1/mods/$PROJECT_ID" \
+            local website_url
+            website_url=$(curl -sS \
+                               -X GET "https://api.curseforge.com/v1/mods/$project_id" \
                                -H 'Accept: application/json' \
                                -H "x-api-key: $APIKEY" \
-                              | jq -r '.data.links.websiteUrl'
-                       )
+                            | jq -r '.data.links.websiteUrl'
+                         )
             echo ""
             echo "You need to download this mod manually."
             echo "Go to the website and find the file and put it in the following directory:"
             echo " ${BUILD_DIR}/mods "
-            echo "URL: $WEBSITE_URL"
-            echo "File: $FILE_NAME"
-            echo "After that you can continue."
-            read -p "Press any key to continue " -n 1 -r
+            echo "URL: $website_url"
+            echo "File: $file_name"
+            read -p "Press any key to continue when you are ready" -n 1 -r
         fi
     done
     echo ""
@@ -114,57 +113,77 @@ download_mods () {
 
 download_forge () {
     echo "Downloading Forge to ${BUILD_DIR}"
-    MC_VERSION=$(jq -r '.minecraft.version' manifest.json)
-    FORGE_VERSION=$(jq -r '.minecraft.modLoaders[0].id' manifest.json | cut -d- -f2)
-    
-    echo "Minecraft version: $MC_VERSION"
-    echo "Forge version: $FORGE_VERSION"
-    wget -q "https://maven.minecraftforge.net/net/minecraftforge/forge/$MC_VERSION-$FORGE_VERSION/forge-$MC_VERSION-$FORGE_VERSION-installer.jar" -P "${BUILD_DIR}"
+
+    local mc_version
+    mc_version=$(jq -r '.minecraft.version' manifest.json)
+
+    local forge_version
+    forge_version=$(jq -r '.minecraft.modLoaders[0].id' manifest.json | cut -d- -f2)
+
+    echo "Minecraft version: $mc_version"
+    echo "Forge version: $forge_version"
+    wget -q "https://maven.minecraftforge.net/net/minecraftforge/forge/$mc_version-$forge_version/forge-$mc_version-$forge_version-installer.jar" -P "${BUILD_DIR}"
 }
 
-print_help () {
-    echo "Above and beyond builder" 
-    echo "Give arguments to build the server or the client pack!"
-    echo "Usage:"
-    echo " ./build.sh --server  -- builds the server pack"
-    echo " ./build.sh --client  -- builds the client pack"
-    echo " ./build.sh --version -- sets the package version in the build"
-    echo " ./build.sh --help    -- builds the client pack"
-    echo "(you can build both by using both arguments)"
+usage () {
+    echo "Above and Beyond builder"
+    echo ""
+    echo "Usage: $0 [--apikey <k>] [--version <v>|-v <v>] [--skip-server|--skip-client] [--help|-h]"
+    echo "            --apikey       sets the CurseForge API key (default is in the .env file)"
+    echo "            --version      sets the package version (default is in the manifest.json)"
+    echo "            --skip-server  skips the server build (default)"
+    echo "            --skip-client  skips the client build"
+    echo "            --help         show this message"
+    echo ""
 }
 
-if [[ -z "$*" ]]; then
-    echo "Building whole pack"
-    build_client
-    build_server
-fi
+BUILD_DIR=build
+MOD_CACHE_DIR=tmp/cache/mods
 
-for ((i=1; i<=$#; i++)); do
-    case ${!i} in
-        "--server")
-            echo "Building server pack"
-            build_server
-            ;;
-        "--client")
-            echo "Buildind client pack"
-            build_client
-            ;;
-        "--help")
-            print_help
-            ;;
-        "--version")
-            i=$((i+1))
-            VERSION="${!i}"
-            ;;
-        *)
-            echo "Incorrect argument!"
-            print_help
-            popd &>/dev/null
-            exit 1
-            ;;
-    esac
+BUILD_SERVER=yes
+BUILD_CLIENT=yes
+
+VERSION=$(jq -r '.version' manifest.json)
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    --apikey)
+      shift
+      APIKEY="$1"
+      shift
+      ;;
+
+    --version | -v)
+      shift
+      VERSION="$1"
+      shift
+      ;;
+
+    --skip-server)
+      shift
+      BUILD_SERVER=no
+      ;;
+
+    --skip-client)
+      shift
+      BUILD_CLIENT=no
+      ;;
+
+    --help | -h | *)
+      usage
+      exit 255
+      ;;
+  esac
 done
 
-popd &>/dev/null
+[[ -z "$APIKEY"  ]] && { echo "API key not found!"; exit 1; }
+[[ -z "$VERSION" ]] && { echo "Version is empty";   exit 1; }
 
-exit 0
+if [ "$BUILD_CLIENT" = "yes" ]; then
+  build_client
+fi
+
+if [ "$BUILD_SERVER" = "yes" ]; then
+  build_server
+fi
