@@ -29,3 +29,4 @@ usernamecache.json
 build/
 .env
 tmp
+*.zip
