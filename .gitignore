@@ -2,6 +2,7 @@
 backups/
 config/ftbquests/backup/
 crash-reports/**
+data/**
 logs/**
 mods/**
 natives/**
