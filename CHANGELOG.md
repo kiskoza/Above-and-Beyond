@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.3.2 - 2024-11-18
+
 * Add recipe to create create:white_sail from create:sail_frame
 * Include a docker compose to start the server more easily
 * Add performance enhancing mods
