@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Change Magnesium for Rubidium (fix missing textures for CB Multipart)
+* Update CB Multipart and CodeChickenLib
+
 ## 1.3.2 - 2024-11-18
 
 * Add recipe to create create:white_sail from create:sail_frame
