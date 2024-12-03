@@ -11,7 +11,7 @@ services:
       # Set modpack type, Minecraft version and server zip
       TYPE: CURSEFORGE
       VERSION: 1.16.5
-      CF_SERVER_MOD: /modpacks/Above-and-Beyond-1.3.2-server.zip
+      CF_SERVER_MOD: /modpacks/Above-and-Beyond-1.3.3-server.zip
       USE_MODPACK_START_SCRIPT: false # there's no start script for this modpack
 
       # Configure Server
