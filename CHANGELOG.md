@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Add Packet Fixer to stabilize NBT size errors
+* Extend tradeable logs with Carpentry profession
 
 ## 1.3.3 - 2024-12-03
 
