@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add Packet Fixer to stabilize NBT size errors
+
 ## 1.3.3 - 2024-12-03
 
 * Change Magnesium for Rubidium (fix missing textures for CB Multipart)
